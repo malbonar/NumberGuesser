@@ -1,0 +1,9 @@
+
+#guess-results-list {
+    list-style-type: none;
+}
+
+.guess-result-digit {
+    font-size: 24px;
+    display: inline;
+}
