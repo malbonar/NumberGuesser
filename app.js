@@ -26,6 +26,10 @@ const numberGuesserUIController = (function(types) {
         instructions: 'howToPlay',
         guessResults: 'guess-results'
     };
+
+    const getDOMStrings = function() {
+        return DOMStrings;
+    }
     
     const userGuess = document.getElementById(DOMStrings.guessInput);
     const guessCountDisplay = document.getElementById(DOMStrings.guessCount);
@@ -34,6 +38,10 @@ const numberGuesserUIController = (function(types) {
     const instructions = document.getElementById(DOMStrings.instructions);
     const results = document.getElementById(DOMStrings.guessResults);
     const newGameBtn = document.getElementById(DOMStrings.startNewGameBtn);
+
+    const getUserGuess = function() {
+        return userGuess.value;
+    }
 
     const addDigitResult = function(index, userGuessResult) {
         const digit = document.createElement('p');
@@ -48,81 +56,83 @@ const numberGuesserUIController = (function(types) {
         digit.appendChild(document.createTextNode(userGuessResult.digits[index]));
         return digit;
     }
+
+    const showError = function(msg) {
+        // find location to insert message
+        const outer = document.querySelector(DOMStrings.gameClass);
+        const header = document.querySelector(DOMStrings.headerClass);
+    
+        const div = document.createElement('div');
+        // add bootstrap alert classes
+        div.className = 'alert alert-danger mt-3';
+        // add text node
+        div.appendChild(document.createTextNode(msg));
+        // insert into DOM
+        outer.insertBefore(div, header);
+    
+        setTimeout(function() { div.remove(); }, 4000);
+    }
+
+    const addResult = function(userGuessResult) {
+        /* this is an example of what to add
+        <li>
+            <span>
+                <p class="guess-result-digit text-success font-weight-bold mr-3">2</p>
+                <p class="guess-result-digit text-danger font-weight-bold mr-3">3</p>
+                <p class="guess-result-digit text-warning font-weight-bold mr-3">4</p>
+                <p class="guess-result-digit text-danger font-weight-bold mr-3">5</p>
+            </span>
+        </li>
+        */
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        const span = document.createElement('span'); 
+        
+        span.appendChild(addDigitResult(0, userGuessResult));
+        span.appendChild(addDigitResult(1, userGuessResult));
+        span.appendChild(addDigitResult(2, userGuessResult));
+        span.appendChild(addDigitResult(3, userGuessResult));
+        li.appendChild(span);
+        guessResultsList.appendChild(li);
+
+        // clear out user input
+        userGuess.value = '';
+        userGuess.focus();
+    }
+
+    const displayGuessCount = function(guessCount) {
+        guessCountDisplay.innerHTML = `Guesses: ${guessCount}`;
+    }
+
+    const clearResults = function() {  
+        while(guessResultsList.lastChild)
+            guessResultsList.lastChild.remove();
+    }
+
+    const showendOfGame = function(guessCount) {
+        modalFeedback.innerHTML = `You guessed the number in ${guessCount} attempts`;
+        $(DOMStrings.modal).modal();
+    }
+
+    const hideInstructionsAndDisplayResults = function() {
+        instructions.style.display = 'none';
+        results.style.display = 'block';
+    }
+
+    const SetEndOfGameFocus = function() {
+        newGameBtn.focus();
+    }
   
     return {
-        getDOMStrings : function() {
-            return DOMStrings;
-        },
-
-        getUserGuess : function() {
-            return userGuess.value;
-        },
-
-        showError : function(msg) {
-            // find location to insert message
-            const outer = document.querySelector(DOMStrings.gameClass);
-            const header = document.querySelector(DOMStrings.headerClass);
-        
-            const div = document.createElement('div');
-            // add bootstrap alert classes
-            div.className = 'alert alert-danger mt-3';
-            // add text node
-            div.appendChild(document.createTextNode(msg));
-            // insert into DOM
-            outer.insertBefore(div, header);
-        
-            setTimeout(function() { div.remove(); }, 4000);
-        },
-
-        addResult : function (userGuessResult) {
-            /* this is an example of what to add
-            <li>
-                <span>
-                    <p class="guess-result-digit text-success font-weight-bold mr-3">2</p>
-                    <p class="guess-result-digit text-danger font-weight-bold mr-3">3</p>
-                    <p class="guess-result-digit text-warning font-weight-bold mr-3">4</p>
-                    <p class="guess-result-digit text-danger font-weight-bold mr-3">5</p>
-                </span>
-            </li>
-            */
-            const li = document.createElement('li');
-            li.className = 'list-group-item';
-            const span = document.createElement('span'); 
-           
-            span.appendChild(addDigitResult(0, userGuessResult));
-            span.appendChild(addDigitResult(1, userGuessResult));
-            span.appendChild(addDigitResult(2, userGuessResult));
-            span.appendChild(addDigitResult(3, userGuessResult));
-            li.appendChild(span);
-            guessResultsList.appendChild(li);
-
-            // clear out user input
-            userGuess.value = '';
-            userGuess.focus();
-        },
-
-        displayGuessCount : function(guessCount) {
-            guessCountDisplay.innerHTML = `Guesses: ${guessCount}`;
-        },
-
-        clearResults : function() {
-            while(guessResultsList.lastChild)
-                guessResultsList.lastChild.remove();
-        },
-
-        showendOfGame : function(guessCount) {
-            modalFeedback.innerHTML = `You guessed the number in ${guessCount} attempts`;
-            $(DOMStrings.modal).modal();
-        },
-
-        hideInstructionsAndDisplayResults : function() {
-            instructions.style.display = 'none';
-            results.style.display = 'block';
-        },
-
-        SetEndOfGameFocus : function() {
-            newGameBtn.focus();
-        }
+        getDOMStrings,
+        getUserGuess,
+        showError,
+        addResult,
+        displayGuessCount,
+        clearResults,
+        showendOfGame,
+        hideInstructionsAndDisplayResults,
+        SetEndOfGameFocus
     }
 })(numberGuesserTypes);
 
@@ -162,26 +172,30 @@ const numberGuesserGameController = (function(types) {
         }, true);
     };
 
-    return { 
-        generateNewTargetNumber : function() {
-            let result = String(Math.floor(Math.random() * 10000));
-            while (result.length < 4) { 
-                result = '0' + result;
-            }
-            targetNumber = result;
-            return targetNumber;
-        },        
-
-        isValidGuess : function(guess) {
-            if (guess == undefined || guess == null || guess === '' || guess.length !== 4 || isNaN(guess))
-                return false;
-            
-            return true;
-        },
-
-        getResult : function(guess) {
-            return new GuessResult(guess);
+    const generateNewTargetNumber = function() {
+        let result = String(Math.floor(Math.random() * 10000));
+        while (result.length < 4) { 
+            result = '0' + result;
         }
+        targetNumber = result;
+        return targetNumber;
+    }
+
+    const isValidGuess = function(guess) {
+        if (guess == undefined || guess == null || guess === '' || guess.length !== 4 || isNaN(guess))
+            return false;
+        
+        return true;
+    }
+
+    const getResult = function(guess) {
+        return new GuessResult(guess);
+    }
+
+    return { 
+        generateNewTargetNumber,
+        isValidGuess,
+        getResult
     }
 })(numberGuesserTypes);
 
@@ -229,13 +243,15 @@ const numberGuesserController = (function(gameCtrl, UICtrl) {
         }
     }
 
+    const init = function() {
+        setupEventListeners();
+        targetNumber = gameCtrl.generateNewTargetNumber();
+        guessCount = 0;
+        UICtrl.displayGuessCount(0);
+    }
+
     return {
-        init: function() {
-            setupEventListeners();
-            targetNumber = gameCtrl.generateNewTargetNumber();
-            guessCount = 0;
-            UICtrl.displayGuessCount(0);
-        }
+        init
     }
 })(numberGuesserGameController, numberGuesserUIController);
 
